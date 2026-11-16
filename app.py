@@ -41,7 +41,7 @@ def check_license_key(license_key: str) -> bool:
     response = requests.post(
         url,
         data={
-            "product_id":             "product_permalink": "ahuvpc",
+            "product_permalink": "ahuvpc",
             "license_key": license_key.strip(),
         },
     )
