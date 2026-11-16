@@ -8,7 +8,7 @@ st.set_page_config(page_title="Tax-Ready Statement Cleaner", page_icon="📊")
 # --- 1. CORE DATA CLEANING LOGIC ---
 def categorize_expense(description: str) -> str:
     desc = str(description).lower()
-    if any(word in desc for word in ["uber", "train", "fuel", "shell", "bp", "parking", "tfl"]):
+    if any(word in desc for word in ["uber", "train", "fuel", "shell", "bp", "parking", "tfl", "trainline"]):
         return "Travel & Transport"
     if any(word in desc for word in ["aws", "github", "adobe", "google", "openai", "hosting", "apple"]):
         return "Software & Subscriptions"
@@ -35,16 +35,18 @@ def clean_statement(df: pd.DataFrame) -> pd.DataFrame:
     df["Category"] = df[desc_col].apply(categorize_expense)
     return df
 
-# --- 2. LICENSE KEY VERIFICATION ---
+# --- 2. LICENSE KEY VERIFICATION (GUMROAD) ---
 def check_license_key(license_key: str) -> bool:
-    if license_key.strip() == "TEST-PRO-2026":
-        return True
-        
-    url = "https://api.lemonsqueezy.com/v1/licenses/validate"
-    response = requests.post(url, data={"license_key": license_key.strip()})
+    url = "https://gumroad.com"
+    response = requests.post(
+        url,
+        data={
+            "product_id": "q4ibfY3-u0Gglabf-Mx",
+            "license_key": license_key.strip(),
+        },
+    )
     if response.status_code == 200:
-        data = response.json()
-        return data.get("valid", False)
+        return response.json().get("success", False)
     return False
 
 # --- 3. USER INTERFACE ---
@@ -53,7 +55,6 @@ st.write("Upload a messy bank CSV to auto-categorize expenses and export a clean
 
 uploaded_file = st.file_uploader("Upload your bank statement (.csv)", type=["csv"])
 
-# One-click sample data toggle for instant testing
 if "use_sample" not in st.session_state:
     st.session_state.use_sample = False
 
@@ -85,8 +86,8 @@ if raw_df is not None:
     st.divider()
     st.subheader("Download Full Tax-Ready Excel File")
     
-    st.markdown("Need a key? **[Get Instant Access (£9 One-Time)](https://www.lemonsqueezy.com)**")
-    license_input = st.text_input("Enter your License Key to unlock download:", placeholder="e.g. XXXXXXXX-XXXX-XXXX")
+    st.markdown("Need a key? **[Get Instant Access (£14.99 One-Time)](https://gumroad.com)**")
+    license_input = st.text_input("Enter your License Key to unlock download:", placeholder="e.g. XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX")
     
     if license_input:
         if check_license_key(license_input):
