@@ -22,7 +22,7 @@ def clean_statement(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = [col.strip().lower() for col in df.columns]
     df = df.dropna(how="all").copy()
     
-    desc_col = next((c for c in df.columns if "desc" in c or "merchant" in c or "memo" in c), df.columns[0])
+    desc_col = next((c for c in df.columns if "desc" in c or "merchant" in c or "memo" in c), df.columns)
     amount_col = next((c for c in df.columns if "amount" in c or "value" in c or "debit" in c), df.columns[-1])
     
     df["Clean Amount"] = (
@@ -40,7 +40,7 @@ def check_license_key(license_key: str) -> bool:
     if license_key.strip() == "TEST-PRO-2026":
         return True
         
-    url = "https://lemonsqueezy.com"
+    url = "https://api.lemonsqueezy.com/v1/licenses/validate"
     response = requests.post(url, data={"license_key": license_key.strip()})
     if response.status_code == 200:
         data = response.json()
@@ -53,8 +53,27 @@ st.write("Upload a messy bank CSV to auto-categorize expenses and export a clean
 
 uploaded_file = st.file_uploader("Upload your bank statement (.csv)", type=["csv"])
 
+# One-click sample data toggle for instant testing
+if "use_sample" not in st.session_state:
+    st.session_state.use_sample = False
+
+if st.button("✨ Try with Sample Bank Statement"):
+    st.session_state.use_sample = True
+
+raw_df = None
 if uploaded_file is not None:
+    st.session_state.use_sample = False
     raw_df = pd.read_csv(uploaded_file)
+elif st.session_state.use_sample:
+    sample_csv = """Date,Description,Amount
+01/11/2026,Uber Trip London,-18.50
+02/11/2026,GitHub Copilot,-10.00
+03/11/2026,Pret A Manger,-6.45
+04/11/2026,Amazon Office Chair,-129.99
+05/11/2026,Trainline Ticket,-42.00"""
+    raw_df = pd.read_csv(io.StringIO(sample_csv))
+
+if raw_df is not None:
     cleaned_df = clean_statement(raw_df)
     
     st.subheader("Preview (First 5 Rows)")
@@ -66,7 +85,7 @@ if uploaded_file is not None:
     st.divider()
     st.subheader("Download Full Tax-Ready Excel File")
     
-    st.markdown("Need a key? **[Get Instant Access (£9 One-Time)](https://lemonsqueezy.com)**")
+    st.markdown("Need a key? **[Get Instant Access (£9 One-Time)](https://www.lemonsqueezy.com)**")
     license_input = st.text_input("Enter your License Key to unlock download:", placeholder="e.g. XXXXXXXX-XXXX-XXXX")
     
     if license_input:
