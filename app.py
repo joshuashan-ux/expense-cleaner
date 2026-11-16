@@ -36,18 +36,19 @@ def clean_statement(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # --- 2. LICENSE KEY VERIFICATION (GUMROAD) ---
-def check_license_key(license_key: str) -> bool:
+def check_license_key(license_key: str):
     url = "https://gumroad.com"
     response = requests.post(
         url,
         data={
+            "product_id": "q4ibfY3-u0Gglabf-Mx",
             "product_permalink": "ahuvpc",
             "license_key": license_key.strip(),
+            "increment_uses_count": "false",
         },
     )
-    if response.status_code == 200:
-        return response.json().get("success", False)
-    return False
+    data = response.json()
+    return data.get("success", False), data.get("message", "Unknown error")
 
 # --- 3. USER INTERFACE ---
 st.title("📊 Tax-Ready Bank Statement Cleaner")
@@ -90,7 +91,8 @@ if raw_df is not None:
     license_input = st.text_input("Enter your License Key to unlock download:", placeholder="e.g. XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX")
     
     if license_input:
-        if check_license_key(license_input):
+        is_valid, api_msg = check_license_key(license_input)
+        if is_valid:
             st.success("License verified! Your Excel report is ready.")
             
             buffer = io.BytesIO()
@@ -106,4 +108,4 @@ if raw_df is not None:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         else:
-            st.error("Invalid license key. Please double-check your key or purchase access above.")
+            st.error(f"Gumroad replied: {api_msg}")
