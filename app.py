@@ -42,21 +42,24 @@ def check_license_key(license_key: str):
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/json",
     }
-    response = requests.post(
-        url,
-        headers=headers,
-        data={
-            "product_id": "q4ibfY3-u0Gglabf-Mxkmg==",
-            "license_key": license_key.strip(),
-            "increment_uses_count": "false",
-        },
-        timeout=10,
-    )
-    try:
-        data = response.json()
-        return data.get("success", False), data.get("message", str(data))
-    except Exception:
-        return False, f"HTTP {response.status_code}: {response.text[:150]}"
+    clean_key = license_key.strip()
+    
+    # Try product_permalink first, then product_id as fallback
+    payloads = [
+        {"product_permalink": "ahuvpc", "license_key": clean_key, "increment_uses_count": "false"},
+        {"product_id": "q4ibfY3-u0Gglabf-Mxkmg==", "license_key": clean_key, "increment_uses_count": "false"},
+    ]
+    last_msg = "Invalid license key"
+    for payload in payloads:
+        response = requests.post(url, headers=headers, data=payload, timeout=10)
+        try:
+            data = response.json()
+            if data.get("success", False):
+                return True, "Verified"
+            last_msg = data.get("message", str(data))
+        except Exception:
+            last_msg = f"HTTP {response.status_code}"
+    return False, last_msg
 
 # --- 3. USER INTERFACE ---
 st.title("📊 Tax-Ready Bank Statement Cleaner")
