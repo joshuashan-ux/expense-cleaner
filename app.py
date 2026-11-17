@@ -54,9 +54,9 @@ def check_license_key(license_key: str):
     )
     try:
         data = response.json()
-        return data.get("success", False), data.get("message", "Invalid key")
+        return data.get("success", False), str(data)
     except Exception:
-        return False, f"HTTP {response.status_code}: {response.text[:120]}"
+        return False, f"HTTP {response.status_code}: {response.text[:150]}"
 
 # --- 3. USER INTERFACE ---
 st.title("📊 Tax-Ready Bank Statement Cleaner")
