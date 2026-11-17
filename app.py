@@ -54,7 +54,7 @@ def check_license_key(license_key: str):
     )
     try:
         data = response.json()
-        return data.get("success", False), str(data)
+        return data.get("success", False), data.get("message", str(data))
     except Exception:
         return False, f"HTTP {response.status_code}: {response.text[:150]}"
 
