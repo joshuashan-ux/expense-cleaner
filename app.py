@@ -38,17 +38,25 @@ def clean_statement(df: pd.DataFrame) -> pd.DataFrame:
 # --- 2. LICENSE KEY VERIFICATION (GUMROAD) ---
 def check_license_key(license_key: str):
     url = "https://gumroad.com"
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
+    }
     response = requests.post(
         url,
+        headers=headers,
         data={
-            "product_id": "q4ibfY3-u0Gglabf-Mx",
-            "product_permalink": "ahuvpc",
+            "product_id": "q4ibfY3-u0Gglabf-Mxkmg==",
             "license_key": license_key.strip(),
             "increment_uses_count": "false",
         },
+        timeout=10,
     )
-    data = response.json()
-    return data.get("success", False), data.get("message", "Unknown error")
+    try:
+        data = response.json()
+        return data.get("success", False), data.get("message", "Invalid key")
+    except Exception:
+        return False, f"HTTP {response.status_code}: {response.text[:120]}"
 
 # --- 3. USER INTERFACE ---
 st.title("📊 Tax-Ready Bank Statement Cleaner")
